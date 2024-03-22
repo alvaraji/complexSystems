@@ -8,7 +8,7 @@ class Ant:
         self.beta = beta    # Beta parameter for balancing pheromone vs. heuristic information
         self.visited = set()  # Set to keep track of visited cities
         self.path = []        # List to store the path taken by the ant
-        self.current_city = None
+        self.current_city = random.randint(0, len(graph) - 1)
 
     def select_next_city(self):
         # Implement the ant's decision rule to select the next city
@@ -23,9 +23,7 @@ class Ant:
             self.path.append(next_city)
         # Optionally, return to the starting city if desired
 
-    def update_pheromone(self):
-        # Update pheromone levels on the edges traversed by the ant
-        # This can be based on the quality of the solution found
-        # Example: deposit pheromone inversely proportional to the length of the ant's tour
+    def reset():
+        self.current_city = random.randint(0, len(graph) - 1)
 
     # Other methods as needed
