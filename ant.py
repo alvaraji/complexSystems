@@ -1,9 +1,13 @@
 import random
+import numpy as np
 
 class Ant:
     def __init__(self, graph, pheromone_matrix, alpha, beta):
-        self.graph = graph
+
+        self.graph = graph                                  
         self.pheromone_matrix = pheromone_matrix
+        self.deposited_pheromone_matrix = np.zeros((len(self.graph), len(self.graph[0]))) # Initalize zero array for saving pheromone deposits
+
         self.alpha = alpha  # Alpha parameter for balancing pheromone vs. heuristic information
         self.beta = beta    # Beta parameter for balancing pheromone vs. heuristic information
         
@@ -13,11 +17,8 @@ class Ant:
         self.visited = set()                                    # Set to keep track of visited cities
         self.visited.add(self.starting_city)                    # Add starting city
 
+    # Decision function to select the ants next city
     def select_next_city(self):
-        # Implement the ant's decision rule to select the next city
-        # This can be based on pheromone levels and heuristic information
-        # Example: use a probabilistic decision based on pheromone and heuristic values
-        # Update self.current_city and add it to self.visited
 
         probabilities = []
         choices_index = []
@@ -38,34 +39,46 @@ class Ant:
         total_prob = sum(probabilities)
         probabilities = [prob / total_prob for prob in probabilities]
 
-        self.current_city = random.choices(choices_index, weights=probabilities)[0] # Pick a path at random weighted with probabilities
+        # Pick a path at random, weighted with probabilities
+        self.current_city = random.choices(choices_index, weights=probabilities)[0]
 
         return self.current_city
 
-
+    # Come up with the ant's weighted random walk
     def construct_solution(self):
 
-        next_city = 0
+        next_city = self.starting_city
 
-        # Construct a solution by iteratively selecting next cities until all cities are visited, and returned home.
+        # Ant will keep selecting cities until all are visited, and the ant returns home.
         while (len(self.visited) < len(self.graph)) or (next_city != self.starting_city):
+
+            last_city = next_city
+            
+            # The any will randomly choose the next city based on weighted probabilities
             next_city = self.select_next_city()
+
+            # Deposit pheromone
+            self.deposited_pheromone_matrix[last_city][next_city] += 1
+            self.deposited_pheromone_matrix[next_city][last_city] += 1
+
+            # Record and continue
             self.visited.add(next_city)
             self.path.append(next_city)
 
-    def reset(self, updated_pheromone_matrix):
+    def reset(self, new_pheromone_matrix):
 
         # Pick a new random starting point
         self.current_city = random.randint(0, len(self.graph) - 1)
         self.starting_city = self.current_city
 
         # Pass the updated pheromone matrix
-        self.pheromone_matrix = updated_pheromone_matrix
+        self.pheromone_matrix = new_pheromone_matrix
 
         # Reset path
         self.path = [self.starting_city]
         self.visited = set()
 
+    # Calculate the probability of a given edge from current city
     def eval(self, index):
 
         # Get pheromone level and distance for current index
@@ -77,6 +90,8 @@ class Ant:
 
         return probability # Not yet normalized
 
+
+    # For printing/debugging purposes
     def print(self, number, cities):
 
         print("Ant number: %d\n" % number)
@@ -87,3 +102,15 @@ class Ant:
                 print(" --> ", end='')
 
         print("]")
+
+    # This will look into distance matrix and output how far the ant walked
+    def pathLength(self):
+
+        total_distance = 0
+        k = 0
+
+        while k < len(self.path)-1:
+            total_distance += self.graph[self.path[k]][self.path[k+1]]
+            k += 1
+
+        return total_distance
