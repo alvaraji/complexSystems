@@ -114,3 +114,8 @@ class Ant:
             k += 1
 
         return total_distance
+
+    def startingCity(self):
+        return self.starting_city
+    
+
