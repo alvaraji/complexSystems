@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 class Ant:
-    def __init__(self, graph, pheromone_matrix, alpha, beta):
+    def __init__(self, graph, pheromone_matrix, alpha, beta, startingCity):
 
         self.graph = graph                                  
         self.pheromone_matrix = pheromone_matrix
@@ -11,7 +11,7 @@ class Ant:
         self.alpha = alpha  # Alpha parameter for balancing pheromone vs. heuristic information
         self.beta = beta    # Beta parameter for balancing pheromone vs. heuristic information
         
-        self.starting_city = random.randint(0, len(graph) - 1)  # Come up with starting city
+        self.starting_city = startingCity  # Come up with starting city
         self.current_city = self.starting_city                  # Set it as current_city
         self.path = [self.starting_city]                        # Initialize the path array
         self.visited = set()                                    # Set to keep track of visited cities
@@ -69,7 +69,7 @@ class Ant:
 
         # Pick a new random starting point
         self.current_city = random.randint(0, len(self.graph) - 1)
-        self.starting_city = self.current_city
+        #self.starting_city = self.current_city //THIS IS NOT NEEDED
 
         # Pass the updated pheromone matrix
         self.pheromone_matrix = new_pheromone_matrix
