@@ -1,8 +1,8 @@
-import random
 import numpy as np
+import random
 
 class Ant:
-    def __init__(self, graph, pheromone_matrix, alpha, beta, startingCity):
+    def __init__(self, graph, pheromone_matrix, alpha, beta, initialCity):
 
         self.graph = graph                                  
         self.pheromone_matrix = pheromone_matrix
@@ -11,7 +11,11 @@ class Ant:
         self.alpha = alpha  # Alpha parameter for balancing pheromone vs. heuristic information
         self.beta = beta    # Beta parameter for balancing pheromone vs. heuristic information
         
-        self.starting_city = startingCity  # Come up with starting city
+        if initialCity == None:
+            self.starting_city = random.randint(0, len(graph) - 1)  # Come up with starting city
+        else:
+            self.starting_city = initialCity
+
         self.current_city = self.starting_city                  # Set it as current_city
         self.path = [self.starting_city]                        # Initialize the path array
         self.visited = set()                                    # Set to keep track of visited cities
@@ -24,16 +28,26 @@ class Ant:
         choices_index = []
         index = 0
 
+        # Last city will track whether or not to backtrack
+        last_city = -1
+        if len(self.path) >= 2:
+            last_city = self.path[-2]
+
         for choice in self.graph[self.current_city]:
             
             # Best choice will be random weighted choice from eval function
 
-            if choice != 0: # If there is a road to take. There should always be at least one road.
+            if choice != 0 and index != last_city: # If there is a road to take. There should always be at least one road. We omit the last visited city
 
                 probabilities.append(self.eval(index)) # Array to calculate probabilities
                 choices_index.append(index) # Save the indexes of the possible choices
 
             index += 1
+
+        # If there are no choices other than last city, go back to last city.
+        if len(probabilities) == 0:
+            self.current_city = last_city
+            return self.current_city
 
         # Normalize
         total_prob = sum(probabilities)
@@ -47,11 +61,13 @@ class Ant:
     # Come up with the ant's weighted random walk
     def construct_solution(self):
 
+
         next_city = self.starting_city
 
         # Ant will keep selecting cities until all are visited, and the ant returns home.
         while (len(self.visited) < len(self.graph)) or (next_city != self.starting_city):
 
+            # Remember last city
             last_city = next_city
             
             # The any will randomly choose the next city based on weighted probabilities
@@ -61,15 +77,25 @@ class Ant:
             self.deposited_pheromone_matrix[last_city][next_city] += 1
             self.deposited_pheromone_matrix[next_city][last_city] += 1
 
+            if last_city == next_city:
+                raise ValueError("Issue with graph, current and next city are the same")
+
             # Record and continue
             self.visited.add(next_city)
             self.path.append(next_city)
 
-    def reset(self, new_pheromone_matrix):
+            #self.printChoice()
+
+
+    def reset(self, new_pheromone_matrix, initialCity):
 
         # Pick a new random starting point
-        self.current_city = random.randint(0, len(self.graph) - 1)
-        #self.starting_city = self.current_city //THIS IS NOT NEEDED
+        if initialCity == None:
+            self.starting_city = random.randint(0, len(graph) - 1)  # Come up with starting city
+        else:
+            self.starting_city = initialCity
+
+        self.current_city = self.starting_city
 
         # Pass the updated pheromone matrix
         self.pheromone_matrix = new_pheromone_matrix
@@ -78,6 +104,9 @@ class Ant:
         self.path = [self.starting_city]
         self.visited = set()
 
+        # Reset tour pheromones
+        self.deposited_pheromone_matrix = np.zeros((len(self.graph), len(self.graph[0])))
+
     # Calculate the probability of a given edge from current city
     def eval(self, index):
 
@@ -85,8 +114,12 @@ class Ant:
         pheromone_level = self.pheromone_matrix[self.current_city][index]
         distance = self.graph[self.current_city][index]
 
+        # Punish visiting a city too many times
+        visited_factor = self.deposited_pheromone_matrix[self.current_city][index]
+
         # Calculate the probability of making this choice
-        probability = (pheromone_level ** self.alpha) * ((1/distance) ** self.beta)
+        probability = ((pheromone_level ** self.alpha) * ((1/distance) ** self.beta))  / (2 ** visited_factor)
+
 
         return probability # Not yet normalized
 
@@ -115,7 +148,52 @@ class Ant:
 
         return total_distance
 
-    def startingCity(self):
-        return self.starting_city
-    
+    def printChoice(self):
 
+        print("Pheromone at this city:")
+        for k in self.pheromone_matrix[self.current_city]:
+            if k > 0:
+                print(k)
+        print("Distances at this city:")
+        for i in self.graph[self.current_city]:
+            if i > 0:
+                print(i)
+
+    def printVariables(self):
+        
+        # Print all the local variables to debug reset()
+        print("self.graph:")
+        print(self.graph)
+        print("")
+
+        print("self.pheromone_matrix:")
+        print(self.pheromone_matrix)
+        print("")
+
+        print("self.deposited_pheromone_matrix:")
+        print(self.deposited_pheromone_matrix)
+        print("")
+
+        print("self.alpha:")
+        print(self.alpha)
+        print("")
+
+        print("self.beta:")
+        print(self.beta)
+        print("")
+
+        print("self.starting_city:")
+        print(self.starting_city)
+        print("")
+
+        print("self.current_city:")
+        print(self.current_city)
+        print("")
+
+        print("self.path:")
+        print(self.path)
+        print("")
+
+        print("self.visited:")
+        print(self.visited)
+        print("")
