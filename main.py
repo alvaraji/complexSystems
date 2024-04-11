@@ -80,6 +80,12 @@ def main():
      # Create the first colony
     starting_city = np.random.randint(0, len(initialize_ACO.distances) - 1)
     ants_colony_A = [Ant.Ant(initialize_ACO.distances, initialize_ACO.pheromones[0], ALPHA, BETA, STARTINGCITY) for _ in range(NUM_ANTS)]
+    
+    if (initialize_ACO.ENV == "test"):
+      ants_colony_A = [Ant.Ant(initialize_ACO.distances, initialize_ACO.pheromones[0], ALPHA, BETA, STARTINGCITY) for _ in range(NUM_ANTS)]
+    else:
+      ants_colony_A = [Ant.Ant(initialize_ACO.distances, initialize_ACO.pheromones, ALPHA, BETA, STARTINGCITY) for _ in range(NUM_ANTS)]
+    
     convergence = []
     pheromone_list = []
     nest_list = []
