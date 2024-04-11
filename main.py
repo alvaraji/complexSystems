@@ -35,7 +35,7 @@ def displayGraph(cities, distances, pheromone_matrix, nestList):
     if cities[i] in nestList:
       nest[i] = True     
 
-  max_pheromone = 7500
+  max_pheromone = np.max(pheromones)
 
   g = ig.Graph(n_vertices, edges)
 
