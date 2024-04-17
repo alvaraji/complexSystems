@@ -2,15 +2,16 @@ import numpy as np
 import random
 
 class Ant:
-    def __init__(self, graph, pheromone_matrix, alpha, beta, initialCity):
+    def __init__(self, graph, pheromone_matrix, alpha, beta, initialCity, colonyNum):
 
-        self.graph = graph                                  
+        self.graph = graph
         self.pheromone_matrix = pheromone_matrix
         self.deposited_pheromone_matrix = np.zeros((len(self.graph), len(self.graph[0]))) # Initalize zero array for saving pheromone deposits
+        self.colonyNumber = colonyNum
 
         self.alpha = alpha  # Alpha parameter for balancing pheromone vs. heuristic information
         self.beta = beta    # Beta parameter for balancing pheromone vs. heuristic information
-        
+
         if initialCity == None:
             self.starting_city = random.randint(0, len(graph) - 1)  # Come up with starting city
         else:
@@ -34,7 +35,7 @@ class Ant:
             last_city = self.path[-2]
 
         for choice in self.graph[self.current_city]:
-            
+
             # Best choice will be random weighted choice from eval function
 
             if choice != 0 and index != last_city: # If there is a road to take. There should always be at least one road. We omit the last visited city
@@ -69,7 +70,7 @@ class Ant:
 
             # Remember last city
             last_city = next_city
-            
+
             # The any will randomly choose the next city based on weighted probabilities
             next_city = self.select_next_city()
 
@@ -91,7 +92,7 @@ class Ant:
 
         # Pick a new random starting point
         if initialCity == None:
-            self.starting_city = random.randint(0, len(graph) - 1)  # Come up with starting city
+            self.starting_city = random.randint(0, len(self.graph) - 1)  # Come up with starting city
         else:
             self.starting_city = initialCity
 
@@ -111,14 +112,17 @@ class Ant:
     def eval(self, index):
 
         # Get pheromone level and distance for current index
-        pheromone_level = self.pheromone_matrix[self.current_city][index]
+        pheromone_level = self.pheromone_matrix[self.current_city][index][self.colonyNumber]
         distance = self.graph[self.current_city][index]
+
+        #get a ratio of pheromone owned by this ant to the maximum pheromone on this path
+        rivalry_factor = pheromone_level/np.max(self.pheromone_matrix[self.current_city][index])
 
         # Punish visiting a city too many times
         visited_factor = self.deposited_pheromone_matrix[self.current_city][index]
 
         # Calculate the probability of making this choice
-        probability = ((pheromone_level ** self.alpha) * ((1/distance) ** self.beta))  / (2 ** visited_factor)
+        probability = (((pheromone_level ** self.alpha) * ((1/distance) ** self.beta))  / (2 ** visited_factor)) * rivalry_factor
 
 
         return probability # Not yet normalized
@@ -150,7 +154,7 @@ class Ant:
 
     def printChoice(self):
 
-        print("Pheromone at this city:")
+        print("Pheromones at this city:")
         for k in self.pheromone_matrix[self.current_city]:
             if k > 0:
                 print(k)
@@ -160,7 +164,7 @@ class Ant:
                 print(i)
 
     def printVariables(self):
-        
+
         # Print all the local variables to debug reset()
         print("self.graph:")
         print(self.graph)

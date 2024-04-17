@@ -1,13 +1,15 @@
 import numpy as np
 import math
 
-INITIAL_PHEROMONE = 0.1
+INITIAL_PHEROMONE = 0.1 #Sets the initial number if pheromones to start with
+
 
 ENV = "test" #Sets enviornment from test to 'production', prod creates random graphs (choices: 'prod' and 'test')
 NUM_CITIES = 20 #Sets the number of cities t randomly scatter
 MIN_EDGE_SIZE = 75 #SETS MINIMUM EDGE LENGTH POSSIBLE
 MAX_EDGE_SIZE = 250 #SETS MAXIMUM EDGE LENGTH POSSIBLE
 EDGE_TO_CITY_RATIO = 1.15 #SETS HOW MANY EDGES SHOULD THERE BE RELATIVE TO HOW MANY CITIES
+NUM_NESTS = 2 #The number of colonies to run the simulation with
 
 if ENV == "prod":
   cities = []
@@ -18,14 +20,14 @@ if ENV == "prod":
   for i in range(NUM_CITIES):
     cities.append(str(i))
     distances.append([0] * NUM_CITIES)
-    pheromones.append([0] * NUM_CITIES)
+    pheromones.append([[0] * NUM_NESTS] * NUM_CITIES)
 
   #populate distances according to the number of edges desired
   for j in range(math.ceil(NUM_CITIES*EDGE_TO_CITY_RATIO)):
     #Pick two random cities
     city1 = np.random.randint(0, (NUM_CITIES - 1))
     city2 = np.random.randint(0, (NUM_CITIES - 1))
-    
+
     #keep picking until there is no edge between chosen cities
     #AND until city 1 is not also city 2
     while ((distances[city1][city2] != 0) or (city1 == city2)):
@@ -40,9 +42,9 @@ if ENV == "prod":
     distances[city2][city1] = edge_length
 
     #add initial pheromones to existing city edge
-    pheromones[city1][city2] = INITIAL_PHEROMONE
-    pheromones[city2][city1] = INITIAL_PHEROMONE
-  
+    pheromones[city1][city2] = [INITIAL_PHEROMONE] * NUM_NESTS
+    pheromones[city2][city1] = [INITIAL_PHEROMONE] * NUM_NESTS
+
   #if a city is completely disconnected, connect it to another city
   for k in range(NUM_CITIES):
     if (np.max(distances[k]) == 0):
@@ -60,8 +62,8 @@ if ENV == "prod":
       distances[city_connect][k] = edge_length
 
       #add initial pheromones to existing city edge
-      pheromones[k][city_connect] = INITIAL_PHEROMONE
-      pheromones[city_connect][k] = INITIAL_PHEROMONE      
+      pheromones[k][city_connect] = [INITIAL_PHEROMONE] * NUM_NESTS
+      pheromones[city_connect][k] = [INITIAL_PHEROMONE] * NUM_NESTS
 
 
 elif ENV == "test":
@@ -119,6 +121,6 @@ elif ENV == "test":
   pheromones = []
 
   for k in distances:
-      pheromones.append([[INITIAL_PHEROMONE if distance != 0 else 0 for distance in row] for row in distances])
+      pheromones.append([[[INITIAL_PHEROMONE] * NUM_NESTS if distance != 0 else [0] * NUM_NESTS for distance in row] for row in distances])
 else:
   raise Exception("Error! Environment varaible \'" + ENV + "\' not recognized")
